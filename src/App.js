@@ -29,7 +29,17 @@ const assets = [
 //
 function Home() {
   const navigate = useNavigate();
-  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  // Initialize selectedIndex from sessionStorage (if available), defaulting to 0.
+  const [selectedIndex, setSelectedIndex] = useState(() => {
+    const savedIndex = sessionStorage.getItem("selectedIndex");
+    return savedIndex !== null ? parseInt(savedIndex, 10) : 0;
+  });
+
+  // Update sessionStorage whenever selectedIndex changes.
+  useEffect(() => {
+    sessionStorage.setItem("selectedIndex", selectedIndex);
+  }, [selectedIndex]);
 
   // Set up a keydown event listener to handle remote control keys:
   useEffect(() => {
