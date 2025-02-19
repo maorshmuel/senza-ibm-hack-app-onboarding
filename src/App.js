@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import shaka from 'shaka-player';
 
@@ -25,10 +25,49 @@ const assets = [
 ];
 
 //
-// Home Component: shows the three assets
+// Home Component: shows the three assets with remote control navigation
 //
 function Home() {
   const navigate = useNavigate();
+
+  // Initialize selectedIndex from sessionStorage (if available), defaulting to 0.
+  const [selectedIndex, setSelectedIndex] = useState(() => {
+    const savedIndex = sessionStorage.getItem("selectedIndex");
+    return savedIndex !== null ? parseInt(savedIndex, 10) : 0;
+  });
+
+  // Update sessionStorage whenever selectedIndex changes.
+  useEffect(() => {
+    sessionStorage.setItem("selectedIndex", selectedIndex);
+  }, [selectedIndex]);
+
+  // Set up a keydown event listener to handle remote control keys:
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      switch (event.key) {
+        case "ArrowRight":
+          setSelectedIndex((prevIndex) => (prevIndex + 1) % assets.length);
+          break;
+        case "ArrowLeft":
+          setSelectedIndex((prevIndex) =>
+            (prevIndex - 1 + assets.length) % assets.length
+          );
+          break;
+        case "Enter":
+          navigate(`/player/${assets[selectedIndex].id}`);
+          break;
+        default:
+          return;
+      }
+      event.preventDefault();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedIndex, navigate]);
 
   const handleClick = (id) => {
     navigate(`/player/${id}`);
@@ -36,8 +75,17 @@ function Home() {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'space-around', padding: '20px' }}>
-      {assets.map(asset => (
-        <div key={asset.id} onClick={() => handleClick(asset.id)} style={{ cursor: 'pointer', textAlign: 'center' }}>
+      {assets.map((asset, index) => (
+        <div
+          key={asset.id}
+          onClick={() => handleClick(asset.id)}
+          style={{
+            cursor: 'pointer',
+            textAlign: 'center',
+            border: index === selectedIndex ? '3px solid #007acc' : 'none',
+            padding: '5px'
+          }}
+        >
           <img src={asset.posterUrl} alt={asset.title} style={{ width: '300px' }} />
           <h3>{asset.title}</h3>
         </div>
@@ -53,7 +101,7 @@ function Player() {
   const { id } = useParams();
   const videoRef = React.useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Find the asset by id
     const asset = assets.find(a => a.id === id);
     if (!asset) return;

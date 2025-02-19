@@ -3,6 +3,14 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { init, uiReady } from 'senza-sdk';
+
+init();
+
+// When the DOM is fully loaded, signal that the UI is ready
+document.addEventListener('DOMContentLoaded', () => {
+  uiReady();
+});
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
